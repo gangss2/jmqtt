@@ -1,5 +1,6 @@
 package org.jmqtt.store.rocksdb;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -12,7 +13,7 @@ public class RocksdbStoreTest {
     private char sep = 1;
 
     @Before
-    public void before(){
+    public void before() {
         RocksDB.loadLibrary();
         Options options = new Options();
         options.setCreateIfMissing(true)
@@ -57,7 +58,7 @@ public class RocksdbStoreTest {
 
         options.setTableFormatConfig(table_options);
         try {
-            rocksDB = RocksDB.open(options,"db");
+            rocksDB = RocksDB.open(options, "db");
         } catch (RocksDBException e) {
             e.printStackTrace();
         }
@@ -67,7 +68,7 @@ public class RocksdbStoreTest {
     public void testMap() throws RocksDBException {
         String key = "key1";
         String value = "this is a test value";
-        rocksDB.put(key.getBytes(),value.getBytes());
+        rocksDB.put(key.getBytes(), value.getBytes());
         String getValue = new String(rocksDB.get(key.getBytes()));
         Assert.assertTrue(getValue.equals(value));
     }
@@ -79,41 +80,42 @@ public class RocksdbStoreTest {
         String field2 = "field2";
         String value1 = "value1";
         String value2 = "value2";
-        hset(key,field1,value1);
-        hset(key,field2,value2);
+        hset(key, field1, value1);
+        hset(key, field2, value2);
         RocksIterator iterator = rocksDB.newIterator();
-        for(iterator.seek(key.getBytes());iterator.isValid();iterator.next()){
+        for (iterator.seek(key.getBytes()); iterator.isValid(); iterator.next()) {
             System.out.println(new String(iterator.key()) + "=====" + new String(iterator.value()));
         }
     }
 
-
-    private void hset(String key,String field,String value) throws RocksDBException {
+    private void hset(String key, String field, String value) throws RocksDBException {
         String relKey = key + sep + field;
-        rocksDB.put(relKey.getBytes(),value.getBytes());
+        rocksDB.put(relKey.getBytes(), value.getBytes());
     }
 
-    private void hList(String key,String value) throws RocksDBException {
-        rocksDB.put((key + sep + value).getBytes(),value.getBytes());
+    private void hList(String key, String value) throws RocksDBException {
+        rocksDB.put((key + sep + value).getBytes(), value.getBytes());
     }
 
     @Test
     public void testList() throws RocksDBException {
         String listKey = "listKey";
-        for(int i = 0 ; i < 10; i++){
+        for (int i = 0; i < 10; i++) {
             long rs = rocksDB.getLatestSequenceNumber();
             System.out.println(rs);
             byte[] byteKey = (listKey + sep + rs).getBytes();
-            rocksDB.put(byteKey,("val"+i).getBytes());
+            rocksDB.put(byteKey, ("val" + i).getBytes());
         }
         RocksIterator iterator = rocksDB.newIterator();
 
-        for(iterator.seek(listKey.getBytes());iterator.isValid();iterator.next()){
+        for (iterator.seek(listKey.getBytes()); iterator.isValid(); iterator.next()) {
             System.out.println(new String(iterator.key()) + "========" + new String(iterator.value()));
         }
     }
 
-
-
+    @After
+    public void after() {
+        rocksDB.close();
+    }
 
 }
